@@ -14,7 +14,10 @@
       <h1>Planificador de comidas</h1>
       <p>Armá el menú, controlá el presupuesto y llevá la lista de compras desde el celular.</p>
     </div>
-    <button id="resetBtn" class="btn btn-light" type="button">Reiniciar</button>
+    <div class="hero-actions">
+      <button id="syncSheetBtn" class="btn btn-primary" type="button">📊 Guardar en Google Sheet</button>
+      <button id="resetBtn" class="btn btn-light" type="button">Reiniciar</button>
+    </div>
   </header>
 
   <main class="container">
@@ -64,6 +67,10 @@
         <div class="summary-card">
           <span>Compra estimada</span>
           <strong id="estimatedDisplay">$0</strong>
+        </div>
+        <div class="summary-card">
+          <span>Gasto Real (Comprado)</span>
+          <strong id="spentDisplay">$0</strong>
         </div>
         <div class="summary-card" id="balanceCard">
           <span>Disponible</span>
