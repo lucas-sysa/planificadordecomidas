@@ -18,166 +18,83 @@
   </header>
 
   <main class="container">
+    <!-- Paso 1: Configuración Semanal -->
     <section class="panel setup-panel">
       <div class="section-heading">
         <div>
           <span class="step">1</span>
-          <h2>Configuración general</h2>
+          <h2>Configuración semanal</h2>
         </div>
         <span id="saveStatus" class="save-status">Guardado automático</span>
       </div>
 
-      <p class="section-note">Indicá cuánto querés gastar y generá ideas simples para un día o para toda la semana. Los valores son aproximados y después podés registrar el gasto real en el paso 2.</p>
-
-      <div class="suggestion-controls">
+      <div class="form-grid">
         <label>
-          Presupuesto mensual
+          Presupuesto semanal
           <div class="input-prefix">
             <span>$</span>
             <input id="budgetInput" type="number" min="0" step="1000" value="200000" />
           </div>
         </label>
+
         <label>
           Cantidad de personas
           <input id="peopleInput" type="number" min="1" max="15" value="4" />
         </label>
+
         <label>
-          Planificar
-          <select id="suggestionPeriodInput">
-            <option value="day">Un día</option>
-            <option value="week">Una semana</option>
+          Comida principal
+          <select id="mealTypeInput">
+            <option value="Cena">Cena</option>
+            <option value="Almuerzo">Almuerzo</option>
+            <option value="Almuerzo y cena">Almuerzo y cena</option>
           </select>
         </label>
+
         <label>
-          Desde
-          <input id="suggestionStartDateInput" type="date" />
+          Semana
+          <input id="weekInput" type="week" />
         </label>
-        <label>
-          Comidas
-          <select id="suggestionSlotsInput">
-            <option value="both">Almuerzo y cena</option>
-            <option value="almuerzo">Solo almuerzo</option>
-            <option value="cena">Solo cena</option>
-          </select>
-        </label>
-        <button id="generateSuggestionsBtn" class="btn btn-primary suggestion-generate-btn" type="button">Generar sugerencias</button>
       </div>
 
-      <div class="budget-summary suggestion-summary">
+      <div class="budget-summary">
         <div class="summary-card">
-          <span>Presupuesto mensual</span>
+          <span>Presupuesto</span>
           <strong id="budgetDisplay">$200.000</strong>
         </div>
         <div class="summary-card">
-          <span>Plan sugerido</span>
+          <span>Compra estimada</span>
           <strong id="estimatedDisplay">$0</strong>
         </div>
         <div class="summary-card" id="balanceCard">
-          <span>Margen del período</span>
-          <strong id="balanceDisplay">$0</strong>
+          <span>Disponible</span>
+          <strong id="balanceDisplay">$200.000</strong>
         </div>
         <div class="summary-card">
           <span>Por persona</span>
           <strong id="perPersonDisplay">$50.000</strong>
         </div>
       </div>
-
-      <div id="suggestionsEmpty" class="suggestions-empty">Generá un plan para ver las comidas sugeridas.</div>
-      <div id="suggestionsList" class="suggestions-list"></div>
     </section>
 
-    <section class="panel meal-entry-panel">
-      <div class="section-heading">
-        <div>
-          <span class="step">2</span>
-          <h2>Registrar una comida</h2>
-        </div>
-        <span class="save-status">Se guarda en el calendario</span>
-      </div>
-      <p class="section-note">Elegí cualquier fecha del mes, indicá qué comieron y cuánto gastaron.</p>
-
-      <form id="mealEntryForm" class="meal-entry-form">
-        <label>
-          Fecha
-          <input id="mealDateInput" type="date" required />
-        </label>
-        <label>
-          Tipo de comida
-          <select id="mealSlotInput">
-            <option value="almuerzo">☀️ Almuerzo</option>
-            <option value="cena">🌙 Cena</option>
-          </select>
-        </label>
-        <label class="meal-name-field">
-          ¿Qué comieron?
-          <input id="mealNameInput" type="text" maxlength="100" required placeholder="Ej.: Milanesas de pollo con puré" />
-        </label>
-        <label>
-          Gasto
-          <div class="input-prefix">
-            <span>$</span>
-            <input id="mealCostInput" type="number" min="0" step="100" required placeholder="Ej.: 8500" />
-          </div>
-        </label>
-        <button id="saveMealBtn" class="btn btn-primary meal-save-btn" type="submit">Guardar en el calendario</button>
-        <button id="cancelMealEditBtn" class="btn btn-light hidden" type="button">Cancelar edición</button>
-      </form>
-      <div id="mealFormMessage" class="form-message hidden" role="status"></div>
-    </section>
-
-    <section class="panel calendar-panel">
-      <div class="section-heading calendar-heading">
-        <div>
-          <span class="step">3</span>
-          <h2>Agenda mensual de comidas</h2>
-        </div>
-        <div class="calendar-controls">
-          <button id="prevMonthBtn" class="icon-btn calendar-nav" type="button" aria-label="Mes anterior">‹</button>
-          <strong id="calendarMonthLabel"></strong>
-          <button id="nextMonthBtn" class="icon-btn calendar-nav" type="button" aria-label="Mes siguiente">›</button>
-        </div>
-      </div>
-      <p class="section-note">Usá las flechas, la rueda del mouse sobre el calendario o deslizá en el celular para cambiar de mes. Tocá un día para ver sus comidas.</p>
-
-      <div class="monthly-dashboard">
-        <div class="actual-summary">
-          <span>Presupuesto del mes</span>
-          <strong id="monthlyBudgetDisplay">$0</strong>
-        </div>
-        <div class="actual-summary">
-          <span>Gasto real del mes</span>
-          <strong id="monthlyActualDisplay">$0</strong>
-        </div>
-        <div class="actual-summary" id="monthlyBalanceCard">
-          <span>Disponible</span>
-          <strong id="monthlyBalanceDisplay">$0</strong>
-        </div>
-      </div>
-      <div class="month-progress-wrap">
-        <div class="progress-info"><span>Presupuesto utilizado</span><strong id="monthProgressText">0%</strong></div>
-        <div class="progress-bar"><div id="monthProgressFill"></div></div>
-      </div>
-
-      <div class="calendar-weekdays" aria-hidden="true">
-        <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
-      </div>
-      <div id="calendarGrid" class="calendar-grid" tabindex="0"></div>
-
-      <section class="selected-day-panel">
-        <div>
-          <span class="eyebrow">Día seleccionado</span>
-          <h3 id="selectedDayTitle">Seleccioná un día del calendario</h3>
-        </div>
-        <div id="selectedDayEntries" class="selected-day-entries">
-          <p class="selected-day-empty">Acá vas a ver el almuerzo, la cena y el gasto total del día.</p>
-        </div>
-      </section>
-    </section>
-
+    <!-- Paso 2: Menú Semanal -->
     <section class="panel">
       <div class="section-heading">
         <div>
-          <span class="step">4</span>
+          <span class="step">2</span>
+          <h2>Menú de la semana</h2>
+        </div>
+        <button id="generateMenuBtn" class="btn btn-primary" type="button">Generar menú sugerido</button>
+      </div>
+      <p class="section-note">Podés editar cualquier comida. Las sugerencias buscan reutilizar ingredientes y evitar desperdicios.</p>
+      <div id="menuGrid" class="menu-grid"></div>
+    </section>
+
+    <!-- Paso 3: Lista de Compras -->
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <span class="step">3</span>
           <h2>Lista de compras</h2>
         </div>
         <button id="addItemBtn" class="btn btn-secondary" type="button">+ Agregar producto</button>
@@ -211,6 +128,30 @@
       <div id="emptyState" class="empty-state hidden">No hay productos para mostrar.</div>
     </section>
 
+    <!-- Paso 4: Agenda Mensual de Comidas (NUEVA SECCIÓN) -->
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <span class="step">4</span>
+          <h2>Agenda mensual de comidas</h2>
+        </div>
+        <div class="calendar-controls">
+          <button id="prevMonthBtn" class="btn btn-light" type="button">◀ Ant</button>
+          <span id="calendarMonthLabel" class="calendar-month-title"></span>
+          <button id="nextMonthBtn" class="btn btn-light" type="button">Sig ▶</button>
+        </div>
+      </div>
+      <p class="section-note">Escribí tus comidas por día en el calendario o asigna comidas mensuales. Todo se guardará automáticamente.</p>
+      
+      <div class="calendar-container">
+        <div class="calendar-header-days">
+          <div>Dom</div><div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
+        </div>
+        <div id="calendarGrid" class="calendar-grid"></div>
+      </div>
+    </section>
+
+    <!-- Paso 5: Consejos de Organización -->
     <section class="panel tips-panel">
       <div class="section-heading">
         <div>
@@ -238,6 +179,7 @@
     </section>
   </main>
 
+  <!-- Diálogo para editar/agregar productos -->
   <dialog id="itemDialog">
     <form id="itemForm" method="dialog">
       <div class="dialog-heading">
@@ -285,6 +227,14 @@
       </div>
     </form>
   </dialog>
+
+  <template id="menuCardTemplate">
+    <article class="menu-card">
+      <div class="day-badge"></div>
+      <textarea rows="2" maxlength="100"></textarea>
+      <button class="swap-btn" type="button">Cambiar sugerencia</button>
+    </article>
+  </template>
 
   <template id="shoppingItemTemplate">
     <article class="shopping-item">
