@@ -1,6 +1,6 @@
 const STORAGE_KEY = 'planificadorComidasV1';
-// COLOCÁ AQUÍ LA URL DE TU APPS SCRIPT
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwDWmFPCXaM2LixieIPm8qZbKgsmQDleS7a_rtsboehQFP9GVoej2w9KHbDk7wb6IB54g/exec';
+// COLOCA AQUÍ TU URL DE GOOGLE APPS SCRIPT
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwDWmFPCXaM2LixieIPm8qZbKgsmQDleS7a_rtsboehQFP9GVoej2w9KHbDk7wb6IB54g/exec'; 
 
 const days = ['Sábado', 'Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
 
@@ -48,7 +48,6 @@ const els = {
   weekInput: document.querySelector('#weekInput'),
   budgetDisplay: document.querySelector('#budgetDisplay'),
   estimatedDisplay: document.querySelector('#estimatedDisplay'),
-  spentDisplay: document.querySelector('#spentDisplay'),
   balanceDisplay: document.querySelector('#balanceDisplay'),
   perPersonDisplay: document.querySelector('#perPersonDisplay'),
   balanceCard: document.querySelector('#balanceCard'),
@@ -67,8 +66,7 @@ const els = {
   itemQuantityInput: document.querySelector('#itemQuantityInput'),
   itemCategoryInput: document.querySelector('#itemCategoryInput'),
   itemPriceInput: document.querySelector('#itemPriceInput'),
-  saveStatus: document.querySelector('#saveStatus'),
-  syncSheetBtn: document.querySelector('#syncSheetBtn')
+  saveStatus: document.querySelector('#saveStatus')
 };
 
 function loadState() {
@@ -97,9 +95,32 @@ function loadState() {
 
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  els.saveStatus.textContent = 'Guardado ✓';
+  els.saveStatus.textContent = 'Guardando...';
+  
   clearTimeout(saveState.timer);
-  saveState.timer = setTimeout(() => els.saveStatus.textContent = 'Guardado automático', 1100);
+  saveState.timer = setTimeout(() => {
+    els.saveStatus.textContent = 'Guardado local ✓';
+    syncToGoogleSheet();
+  }, 1000);
+}
+
+async function syncToGoogleSheet() {
+  if (!WEB_APP_URL || WEB_APP_URL === 'TU_WEB_APP_URL_AQUI') return;
+
+  try {
+    els.saveStatus.textContent = 'Sincronizando...';
+    await fetch(WEB_APP_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state)
+    });
+    els.saveStatus.textContent = 'Guardado en Sheet ✓';
+    setTimeout(() => els.saveStatus.textContent = 'Guardado automático', 2000);
+  } catch (err) {
+    console.error('Error al sincronizar con Google Sheets:', err);
+    els.saveStatus.textContent = 'Error al sincronizar';
+  }
 }
 
 function getCurrentWeekValue() {
@@ -127,15 +148,12 @@ function renderAll() {
 }
 
 function updateSummary() {
-  const totalEstimated = state.items.reduce((sum, item) => sum + Number(item.price || 0), 0);
-  const totalSpent = state.items.filter(item => item.checked).reduce((sum, item) => sum + Number(item.price || 0), 0);
-  
-  const balance = Number(state.budget) - totalSpent;
+  const total = state.items.reduce((sum, item) => sum + Number(item.price || 0), 0);
+  const balance = Number(state.budget) - total;
   const perPerson = Number(state.budget) / Math.max(1, Number(state.people));
 
   els.budgetDisplay.textContent = formatCurrency(state.budget);
-  els.estimatedDisplay.textContent = formatCurrency(totalEstimated);
-  els.spentDisplay.textContent = formatCurrency(totalSpent);
+  els.estimatedDisplay.textContent = formatCurrency(total);
   els.balanceDisplay.textContent = formatCurrency(balance);
   els.perPersonDisplay.textContent = formatCurrency(perPerson);
   els.balanceCard.classList.toggle('warning', balance < 0);
@@ -197,7 +215,6 @@ function renderShoppingList() {
       item.checked = check.checked;
       saveState();
       renderShoppingList();
-      updateSummary();
     });
 
     node.querySelector('.edit-btn').addEventListener('click', () => openDialog(item));
@@ -308,44 +325,6 @@ document.querySelector('#resetBtn').addEventListener('click', () => {
   if (!confirm('¿Querés borrar los cambios y volver al plan inicial?')) return;
   localStorage.removeItem(STORAGE_KEY);
   location.reload();
-});
-
-// ENVIAR Y GUARDAR EN GOOGLE SHEETS
-els.syncSheetBtn.addEventListener('click', async () => {
-  if (APPS_SCRIPT_URL.includes('TU_SCRIPT_ID_AQUI')) {
-    alert('Tenés que colocar la URL de tu script en la variable APPS_SCRIPT_URL de app.js.');
-    return;
-  }
-
-  els.syncSheetBtn.disabled = true;
-  els.syncSheetBtn.textContent = '⏳ Guardando...';
-
-  // Calculamos montos totales para enviar al backend
-  const totalEstimated = state.items.reduce((sum, item) => sum + Number(item.price || 0), 0);
-  const totalSpent = state.items.filter(item => item.checked).reduce((sum, item) => sum + Number(item.price || 0), 0);
-
-  const payload = {
-    ...state,
-    totalEstimated,
-    totalSpent
-  };
-
-  try {
-    await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    alert('¡Datos guardados con éxito en tu planilla Google Sheet!');
-  } catch (error) {
-    alert('Ocurrió un error al intentar enviar los datos a la planilla.');
-    console.error(error);
-  } finally {
-    els.syncSheetBtn.disabled = false;
-    els.syncSheetBtn.textContent = '📊 Guardar en Google Sheet';
-  }
 });
 
 renderAll();
