@@ -1,6 +1,5 @@
 const STORAGE_KEY = 'planificadorComidasV1';
-// COLOCA AQUÍ TU URL DE GOOGLE APPS SCRIPT
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwDWmFPCXaM2LixieIPm8qZbKgsmQDleS7a_rtsboehQFP9GVoej2w9KHbDk7wb6IB54g/exec'; 
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwDWmFPCXaM2LixieIPm8qZbKgsmQDleS7a_rtsboehQFP9GVoej2w9KHbDk7wb6IB54g/exec'; // Recordá poner aquí tu URL de Apps Script
 
 const days = ['Sábado', 'Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
 
@@ -39,6 +38,8 @@ const defaultItems = [
   { id: crypto.randomUUID(), name: 'Aceite y condimentos', quantity: 'Reposición', category: 'Almacén', price: 9000, checked: false }
 ];
 
+let currentDate = new Date();
+
 const state = loadState();
 
 const els = {
@@ -66,13 +67,21 @@ const els = {
   itemQuantityInput: document.querySelector('#itemQuantityInput'),
   itemCategoryInput: document.querySelector('#itemCategoryInput'),
   itemPriceInput: document.querySelector('#itemPriceInput'),
-  saveStatus: document.querySelector('#saveStatus')
+  saveStatus: document.querySelector('#saveStatus'),
+  calendarMonthLabel: document.querySelector('#calendarMonthLabel'),
+  calendarGrid: document.querySelector('#calendarGrid'),
+  prevMonthBtn: document.querySelector('#prevMonthBtn'),
+  nextMonthBtn: document.querySelector('#nextMonthBtn')
 };
 
 function loadState() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
-    try { return JSON.parse(saved); } catch (_) {}
+    try { 
+      const parsed = JSON.parse(saved);
+      if (!parsed.monthlyMenu) parsed.monthlyMenu = {};
+      return parsed;
+    } catch (_) {}
   }
 
   return {
@@ -89,7 +98,8 @@ function loadState() {
       'Tortilla de papas con ensalada',
       'Hamburguesas caseras con papas'
     ],
-    items: defaultItems
+    items: defaultItems,
+    monthlyMenu: {}
   };
 }
 
@@ -105,7 +115,7 @@ function saveState() {
 }
 
 async function syncToGoogleSheet() {
-  if (!WEB_APP_URL || WEB_APP_URL === 'TU_WEB_APP_URL_AQUI') return;
+  if (!WEB_APP_URL || WEB_APP_URL === 'https://script.google.com/macros/s/AKfycbwDWmFPCXaM2LixieIPm8qZbKgsmQDleS7a_rtsboehQFP9GVoej2w9KHbDk7wb6IB54g/exec') return;
 
   try {
     els.saveStatus.textContent = 'Sincronizando...';
@@ -144,6 +154,7 @@ function renderAll() {
   els.weekInput.value = state.week;
   renderMenu();
   renderShoppingList();
+  renderCalendar();
   updateSummary();
 }
 
@@ -233,6 +244,53 @@ function renderShoppingList() {
   updateProgress();
 }
 
+/* Lógica del Calendario Mensual */
+function renderCalendar() {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  const monthNames = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
+
+  els.calendarMonthLabel.textContent = `${monthNames[month]} ${year}`;
+  els.calendarGrid.innerHTML = '';
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const totalDays = new Date(year, month + 1, 0).getDate();
+
+  for (let i = 0; i < firstDay; i++) {
+    const emptyCell = document.createElement('div');
+    emptyCell.className = 'calendar-day empty';
+    els.calendarGrid.appendChild(emptyCell);
+  }
+
+  for (let day = 1; day <= totalDays; day++) {
+    const dayCell = document.createElement('div');
+    dayCell.className = 'calendar-day';
+
+    const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    
+    const dayNumber = document.createElement('span');
+    dayNumber.className = 'day-number';
+    dayNumber.textContent = day;
+
+    const textarea = document.createElement('textarea');
+    textarea.placeholder = 'Comida...';
+    textarea.value = state.monthlyMenu[dateKey] || '';
+
+    textarea.addEventListener('input', (e) => {
+      state.monthlyMenu[dateKey] = e.target.value;
+      saveState();
+    });
+
+    dayCell.appendChild(dayNumber);
+    dayCell.appendChild(textarea);
+    els.calendarGrid.appendChild(dayCell);
+  }
+}
+
 function updateProgress() {
   const total = state.items.length;
   const checked = state.items.filter(item => item.checked).length;
@@ -305,6 +363,16 @@ els.mealTypeInput.addEventListener('change', (event) => {
 els.weekInput.addEventListener('change', (event) => {
   state.week = event.target.value;
   saveState();
+});
+
+els.prevMonthBtn.addEventListener('click', () => {
+  currentDate.setMonth(currentDate.getMonth() - 1);
+  renderCalendar();
+});
+
+els.nextMonthBtn.addEventListener('click', () => {
+  currentDate.setMonth(currentDate.getMonth() + 1);
+  renderCalendar();
 });
 
 els.searchInput.addEventListener('input', renderShoppingList);
